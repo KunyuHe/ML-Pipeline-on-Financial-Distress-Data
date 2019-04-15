@@ -41,7 +41,8 @@ def go():
     """
     Read data, apply changes and write it into a new csv file nam 
     """
-    os.chdir("./data")
+    if os.getcwd() == "D:\\My Documents\\Data Projects\\ML-Pipeline-on-Financial-Distress-Data":
+        os.chdir("./data")
     data, data_types = load_data()
 
     os.chdir("..")

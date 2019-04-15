@@ -4,6 +4,7 @@ Description: Test code for checking the ETL output.
 Author:      Kunyu He
 """
 
+import os
 import etl
 import pytest
 import pandas as pd
