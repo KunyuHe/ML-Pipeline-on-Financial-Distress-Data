@@ -9,7 +9,7 @@ import os
 import sys
 
 
-#============================================================================#
+#----------------------------------------------------------------------------#
 def translate_data_type(data_type):
     """
     Translate a data type from the data dictionary to a domain in pandas
@@ -22,7 +22,7 @@ def translate_data_type(data_type):
     return "object"
 
 
-def load_data(fn):
+def load_data():
     """
     Load data into a pandas DataFrame, extract data types from the data
     dictionary, fill missing values and modify data types.
@@ -32,18 +32,17 @@ def load_data(fn):
     data_types = dict(zip(data_dict['Variable Name'], types))
 
     data = pd.read_csv("credit-data.csv")
-    if fn == "median":
-        data.fillna(data.median(), inplace=True)
-    data.fillna(data.mean(), inplace=True)
+    data.fillna(data.median(), inplace=True)
     
-    return data.astype(data_types)
+    return data.astype(data_types), data_types
 
 
-def go(fn):
+def go():
     """
     Read data, apply changes and write it into a new csv file nam 
     """
-    data = load_data(fn)
+    os.chdir("./data")
+    data, data_types = load_data()
 
     os.chdir("..")
     if "clean_data" not in os.listdir():
@@ -51,17 +50,11 @@ def go(fn):
     os.chdir("./clean_data")
 
     data.to_csv("credit-clean.csv", index=False)
+    return data_types
 
 
-#============================================================================#
+#----------------------------------------------------------------------------#
 if __name__ == "__main__":
-    os.chdir("./data")
-
-    fn = sys.argv[1]
-    if fn not in ["mean", "median"]:
-        print("usage: python3 {} mean (or median)".format(sys.argv[0]))
-        sys.exit(1)
-
-    go(fn)
+    data_types = go()
     print(("ETL process finished. Data wrote to 'credit-clean.csv'"
            " under directory 'clean_data'."))
