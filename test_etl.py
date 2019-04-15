@@ -5,26 +5,25 @@ Author:      Kunyu He
 """
 
 import os
-import etl
 import pytest
+import etl
 import pandas as pd
 
-FILE_NAME = "./clean_data/credit-clean.csv"
+TEST_DIR = "./clean_data"
+
+TEST_ACCESS = os.listdir(TEST_DIR)
+TEST_NO_MISSING = ["credit-clean.csv"]
 
 
 #----------------------------------------------------------------------------#
-def check_file(full_path, extension):
+def check_file(full_path):
     """
-    Check whether a file is in the right format, contains at least some
-    information, and is readable.
+    Check whether a file contains at least some information and is readable.
     Inputs:
         - full_path (string): path to the file
-        - extension (string): e.g. ".txt"
     Returns:
         (None) make assertions if any condition fails
     """
-    if not full_path.endswith(extension):
-        raise AssertionError()
     if not os.path.getsize(full_path) > 0:
         raise AssertionError()
     if not os.path.isfile(full_path) and os.access(full_path, os.R_OK):
@@ -32,19 +31,21 @@ def check_file(full_path, extension):
 
 
 #----------------------------------------------------------------------------#
-def test_file_accessible():
+@pytest.mark.parametrize("file_name", TEST_ACCESS)
+def test_file_accessible(file_name):
     """
     Test whether the data file is accessible for further anaylysis.
     """
-    data_types = etl.go()
-    check_file(FILE_NAME, ".csv")
+    etl.go()
+    check_file(TEST_DIR + file_name)
 
 
-def test_no_missing():
+@pytest.mark.parametrize("file_name", TEST_NO_MISSING)
+def test_no_missing(file_name):
     """
     Test whether there are no missing value in the clean data.
     """
-    data_types = etl.go()
-    data = pd.read_csv(FILE_NAME, dtype=data_types)
+    etl.go()
+    data = pd.read_csv(TEST_DIR + file_name, dtype=data_types)
     if not all(data.isnull().sum() == 0):
         raise AssertionError()

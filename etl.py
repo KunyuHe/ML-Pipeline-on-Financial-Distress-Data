@@ -4,9 +4,14 @@ Description: A collections of functions for ETL.
 Author:      Kunyu He, CAPP'20
 """
 
+import wget
 import pandas as pd
 import os
 import sys
+import json
+
+INPUT_DIR = "./data/"
+OUTPUT_DIR = "./clean_data/"
 
 
 #----------------------------------------------------------------------------#
@@ -27,11 +32,11 @@ def load_data():
     Load data into a pandas DataFrame, extract data types from the data
     dictionary, fill missing values and modify data types.
     """
-    data_dict = pd.read_excel("Data Dictionary.xls", header=1)
+    data_dict = pd.read_excel(INPUT_DIR + "Data Dictionary.xls", header=1)
     types = data_dict.Type.apply(translate_data_type)
     data_types = dict(zip(data_dict['Variable Name'], types))
 
-    data = pd.read_csv("credit-data.csv")
+    data = pd.read_csv(INPUT_DIR + "credit-data.csv")
     data.fillna(data.median(), inplace=True)
     
     return data.astype(data_types), data_types
@@ -39,23 +44,21 @@ def load_data():
 
 def go():
     """
-    Read data, apply changes and write it into a new csv file nam 
+    Read data, apply changes and write it into a new csv file. Also write data
+    dictionary to a json file.
     """
-    if os.getcwd() == "D:\My Documents\Data Projects\ML-Pipeline-on-Financial-Distress-Data":
-        os.chdir("./data")
     data, data_types = load_data()
-
-    os.chdir("..")
     if "clean_data" not in os.listdir():
         os.mkdir("clean_data")
-    os.chdir("./clean_data")
 
-    data.to_csv("credit-clean.csv", index=False)
-    return data_types
-
+    data.to_csv(OUTPUT_DIR + "credit-clean.csv", index=False)
+    with open(OUTPUT_DIR + "data_type.json", 'w') as file:
+        json.dump(data_types, file)
+    
 
 #----------------------------------------------------------------------------#
 if __name__ == "__main__":
-    data_types = go()
+    go()
+
     print(("ETL process finished. Data wrote to 'credit-clean.csv'"
-           " under directory 'clean_data'."))
+           " and 'data_type.json' under directory 'clean_data'."))
