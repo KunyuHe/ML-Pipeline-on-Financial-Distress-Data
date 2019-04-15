@@ -9,7 +9,7 @@ import pytest
 import etl
 import pandas as pd
 
-TEST_DIR = "./clean_data"
+TEST_DIR = "./clean_data/"
 
 TEST_ACCESS = os.listdir(TEST_DIR)
 TEST_NO_MISSING = ["credit-clean.csv"]
@@ -46,6 +46,6 @@ def test_no_missing(file_name):
     Test whether there are no missing value in the clean data.
     """
     etl.go()
-    data = pd.read_csv(TEST_DIR + file_name, dtype=data_types)
+    data = pd.read_csv(TEST_DIR + file_name)
     if not all(data.isnull().sum() == 0):
         raise AssertionError()
