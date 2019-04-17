@@ -4,7 +4,6 @@ Description: A collections of functions for ETL.
 Author:      Kunyu He, CAPP'20
 """
 
-import wget
 import pandas as pd
 import os
 import sys
@@ -61,4 +60,5 @@ if __name__ == "__main__":
     go()
 
     print(("ETL process finished. Data wrote to 'credit-clean.csv'"
-           " and 'data_type.json' under directory 'clean_data'."))
+           " and 'data_type.json' under directory 'clean_data'."
+           " Missing values are filled in with medians of the columns"))
