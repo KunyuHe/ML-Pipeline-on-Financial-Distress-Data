@@ -1,20 +1,19 @@
 """
 Title:       test_viz.py
 Description: Test code for checking functions for visualization.
-Author:      Kunyu He
+Author:      Kunyu He, CAPP'20
 """
 
-import etl
 import json
 import pandas as pd
 import pytest
 import viz
 import matplotlib.pyplot as plt
 
+
 INPUT_DIR = "./clean_data/"
 NON_NUMERIC = ["PersonID", "zipcode", "SeriousDlqin2yrs"]
 
-etl.go()
 with open(INPUT_DIR + "data_type.json") as file:
     data_types = json.load(file)
 data = pd.read_csv(INPUT_DIR + "credit-clean.csv", dtype=data_types)

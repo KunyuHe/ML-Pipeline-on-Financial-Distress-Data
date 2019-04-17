@@ -1,13 +1,14 @@
 """
 Title:       test_etl.py
 Description: Test code for checking the ETL output.
-Author:      Kunyu He
+Author:      Kunyu He, CAPP'20
 """
 
 import os
 import pytest
 import etl
 import pandas as pd
+
 
 TEST_DIR = "./clean_data/"
 

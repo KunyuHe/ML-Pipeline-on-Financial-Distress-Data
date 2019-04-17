@@ -4,6 +4,8 @@ Description: A collections of functions for visualization.
 Author:      Kunyu He, CAPP'20
 """
 
+import json
+import pandas as pd
 import matplotlib.pyplot as plt
 import random
 import seaborn as sns
@@ -12,6 +14,8 @@ import numpy as np
 from matplotlib.font_manager import FontProperties
 from matplotlib import colors
 
+
+INPUT_DIR = "./clean_data/"
 COLORS = list(colors.CSS4_COLORS.values())
 
 title = FontProperties()
@@ -32,6 +36,16 @@ sns.set(style="white")
 
 
 #----------------------------------------------------------------------------#
+def read_clean_data():
+    """
+    Read cleaned credit data in the .csv file with specific data types from
+    the .json file.
+    """
+    with open(INPUT_DIR + "data_type.json") as file:
+        data_types = json.load(file)
+    return pd.read_csv(INPUT_DIR + "credit-clean.csv", dtype=data_types)
+
+
 def bar_plot(ax, ds, col="#1f77b4", sub=True, plot_title=None,
              xlabel=None, ylabel=None, x_ticks=None, xtick_rotation=None,
              annotate=True):
@@ -65,6 +79,7 @@ def bar_plot(ax, ds, col="#1f77b4", sub=True, plot_title=None,
 
 def hist_plot(ax, ds, col, cut=False):
     """
+    Create a histogram for a specific variable.
     """
     if cut:
         xlim = (ds.min(), ds.quantile(0.95))
@@ -78,6 +93,9 @@ def hist_plot(ax, ds, col, cut=False):
 
 def hist_panel(data, panel_title="", cut=False):
     """
+    Plot a panel of histograms showing the distribution of variables, with two
+    histograms in a row, a fixed width of 20, and a fixed height per histogram
+    of 4. The colors are randomly chosen from matplotlib.colors.CSS4_COLORS.
     """
     count = data.shape[1]
     rows = count // 2
@@ -93,6 +111,7 @@ def hist_panel(data, panel_title="", cut=False):
 
 def corr_triangle(data, fig_size=(12, 8), sub=False, plot_title=""):
     """
+    Plot a correlation triangel.
     """
     corr = data.corr()
 
