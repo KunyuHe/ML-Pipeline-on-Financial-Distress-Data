@@ -36,7 +36,7 @@ def load_data():
 
     data = pd.read_csv(INPUT_DIR + "credit-data.csv")
     data.fillna(data.median(), inplace=True)
-    
+
     return data.astype(data_types), data_types
 
 
