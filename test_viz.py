@@ -19,10 +19,11 @@ with open(INPUT_DIR + "data_type.json") as file:
     data_types = json.load(file)
 data = pd.read_csv(INPUT_DIR + "credit-clean.csv", dtype=data_types)
 target = data.SeriousDlqin2yrs
+numeric = data[[col for col in data.columns if col not in NON_NUMERIC]]
 
 TEST_BAR = [target.value_counts(), data.zipcode.value_counts()]
-TEST_HIST = data[[col for col in data.columns if col not in NON_NUMERIC]]
-TEST_CORR = pd.concat([target, TEST_HIST], axis=1)
+TEST_OTHERS = [(numeric, viz.hist_panel),
+               (pd.concat([target, numeric], axis=1), viz.corr_triangle)]
 
 
 #----------------------------------------------------------------------------#
@@ -31,34 +32,24 @@ def test_bar_plot(ds):
     """
     Test whether the bar plotting works fine.
     """
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     viz.bar_plot(ax, ds)
 
     if not plt.gcf().number == 1:
         raise AssertionError()
-    plt.pause(3)
-    plt.close()
+
+    plt.close('all')
 
 
-def test_hist_panels():
+@pytest.mark.parametrize("data, fn", TEST_OTHERS)
+def test_others(data, fn):
     """
-    Test whether the histogram panel plotting works fine.
+    Test whether the histogram panel plotting and correlation triangle
+    plotting work fine.
     """
-    viz.hist_panel(TEST_HIST)
+    fn(data)
 
     if not plt.gcf().number == 1:
         raise AssertionError()
-    plt.pause(3)
-    plt.close()
 
-
-def test_corr_plot():
-    """
-    Test whether the correlation triangle plotting works fine.
-    """
-    viz.corr_triangle(TEST_CORR)
-
-    if not plt.gcf().number == 1:
-        raise AssertionError()
-    plt.pause(3)
-    plt.close()
+    plt.close('all')

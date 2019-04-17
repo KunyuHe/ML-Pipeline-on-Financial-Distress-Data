@@ -5,7 +5,6 @@ Author:      Kunyu He, CAPP'20
 """
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import random
 import seaborn as sns
 import numpy as np
@@ -44,7 +43,7 @@ def bar_plot(ax, ds, col="#1f77b4", sub=True, plot_title=None,
         ax.set_title(plot_title, fontproperties=title)
 
     ax.bar(range(len(ds)), ds, 0.4, color=col, edgecolor=["black"] * len(ds))
-    
+
     ax.set_xlabel(xlabel, fontproperties=axis)
     ax.set_ylabel(ylabel, fontproperties=axis)
     ax.set_xticks(range(len(ds)))
@@ -62,8 +61,6 @@ def bar_plot(ax, ds, col="#1f77b4", sub=True, plot_title=None,
                         textcoords="offset points", ha='center', va='bottom',
                         fontproperties=ticks)
             i +=1
-
-    plt.show()
 
 
 def hist_plot(ax, ds, col, cut=False):
@@ -85,7 +82,7 @@ def hist_panel(data, panel_title="", cut=False):
     count = data.shape[1]
     rows = count // 2
 
-    fig, ax = plt.subplots(figsize=[20, rows * 4])
+    fig, _ = plt.subplots(figsize=[20, rows * 4])
 
     for i in range(count):
         ax_sub = fig.add_subplot(rows, 2, i + 1)
@@ -93,10 +90,8 @@ def hist_panel(data, panel_title="", cut=False):
 
     fig.suptitle(panel_title, fontproperties=title)
 
-    plt.show()
 
-
-def corr_triangle(data, fig_size=[12, 8], sub=False, plot_title=""):
+def corr_triangle(data, fig_size=(12, 8), sub=False, plot_title=""):
     """
     """
     corr = data.corr()
@@ -105,7 +100,7 @@ def corr_triangle(data, fig_size=[12, 8], sub=False, plot_title=""):
     mask[np.triu_indices_from(mask)] = True
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
 
-    fig, ax = plt.subplots(figsize=fig_size)
+    _, ax = plt.subplots(figsize=fig_size)
     sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0,
                 square=True, linewidths=.5, cbar_kws={"shrink": .5})
 
@@ -113,5 +108,3 @@ def corr_triangle(data, fig_size=[12, 8], sub=False, plot_title=""):
         ax.set_title(plot_title, fontproperties=axis)
     else:
         ax.set_title(plot_title, fontproperties=title)
-
-    plt.show()
