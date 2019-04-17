@@ -3,3 +3,4 @@ xlrd>=1.2.0;
 matplotlib>=3.0.1;
 seaborn>=0.9.0;
 numpy>=1.16.1;
+codecov>=2.0.15;
