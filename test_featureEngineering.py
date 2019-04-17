@@ -24,7 +24,7 @@ def test_file_accessible(file_name):
     """
     Test whether the output data files are accessible for further anaylysis.
     """
-    subprocess.call('python etl.py', shell=False)
+    subprocess.call('python3 etl.py', shell=True)
 
     check_file(TEST_DIR + file_name)
 

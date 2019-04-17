@@ -6,7 +6,6 @@ Author:      Kunyu He, CAPP'20
 
 import pandas as pd
 import os
-import sys
 import json
 
 INPUT_DIR = "./data/"
@@ -53,7 +52,7 @@ def go():
     data.to_csv(OUTPUT_DIR + "credit-clean.csv", index=False)
     with open(OUTPUT_DIR + "data_type.json", 'w') as file:
         json.dump(data_types, file)
-    
+
 
 #----------------------------------------------------------------------------#
 if __name__ == "__main__":
