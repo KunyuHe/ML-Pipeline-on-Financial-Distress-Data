@@ -61,4 +61,4 @@ if __name__ == "__main__":
 
     print(("ETL process finished. Data wrote to 'credit-clean.csv'"
            " and 'data_type.json' under directory 'clean_data'."
-           " Missing values are filled in with medians of the columns"))
+           " Missing values are filled in with medians of the columns."))
