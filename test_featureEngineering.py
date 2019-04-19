@@ -60,13 +60,3 @@ def test_one_hot(cat_vars):
     processed_data = featureEngineering.one_hot(data, cat_vars)
     if col_counts - drop_counts + add_counts != processed_data.shape[1]:
         raise AssertionError()
-
-
-@pytest.mark.parametrize("matrix", TEST_SCALING)
-def test_scaling(matrix):
-    """
-    Test whether the function to fit and transform training features with
-    standard scaler works properly.
-    """
-    if not all(abs(matrix.mean(axis=0)) < np.finfo(np.float32).eps):
-        raise AssertionError()
