@@ -26,7 +26,7 @@ GRID_SEARCH_PARAMS = {"KNN": {
                               },
                       "Decision Tree": {
                             'criterion': ["entropy", "gini"],
-                            'min_samples_split': list(np.arange(0.01, 0.11, 0.01)),
+                            'min_samples_split': list(np.arange(0.01, 0.06, 0.01)),
                             'max_depth': list(range(1, 11)),
                             'max_features': list(range(4, 17, 2))
                             },
@@ -43,60 +43,9 @@ DEFAULT_ARGS = {"KNN": {'n_jobs': -1},
                                   'oob_score': True}}
 
 #----------------------------------------------------------------------------#
-def load_features():
-    """
-    Load pre-processed feature matrices.
-    """
-    Xs = np.load(INPUT_DIR + 'X.npz')
-    ys = np.load(INPUT_DIR + 'y.npz')
-    X_train, X_test = Xs['train'], Xs['test']
-    y_train, y_test = ys['train'], ys['test']
-
-    return X_train, X_test, y_train, y_test
-
-
-def evaluate(classifier, X, y, metric="roc_auc"):
-    """
-    Evaluate the fitted classifier on the test set and calculate the
-    evaluation metrics.
-    """
-    re
-
-    fp_rate, tp_rate, thresholds = roc_curve(y_test, y_pred)
-    return auc(fp_rate, tp_rate)
-
-
-def build_benchmark(X, y, metric="ROC AUC"):
+def ask():
     """
     """
-    benchmark_classifier = DecisionTreeClassifier(random_state=123)
-    benchmark_classifier.fit(X_train, y_train)
-
-    return evaluate(benchmark_classifier, X_test, y_test, metric=metric)
-
-
-def tune(model, parameters, X_train, y_train, metric="ROC AUC", n_folds=5,
-         default_args={}):
-    """
-    Use grid search and cross validation to find the best set of hyper-
-    parameters.
-    """
-    classifier = model(**default_args)
-    if metric == "ROC AUC":
-        score = "roc_auc"
-    else:
-        score = "accuracy"
-
-    grid = GridSearchCV(classifier, param_grid=parameters, scoring=score,
-                        n_jobs=-1, cv=n_folds, iid=True, verbose=2)
-    grid.fit(X_train, y_train)
-    
-    return model(**grid.best_params_, **default_args), grid
-
-
-#----------------------------------------------------------------------------#
-if __name__ == "__main__":
-
     model_index = int(input(("Up till now we support:\n"
                              "1. KNeighborsClassifier\n"
                              "2. DecisionTreeClassifier\n"
@@ -118,7 +67,40 @@ if __name__ == "__main__":
                        " most 5 for these two.\n"
                        "Please input the number of folds for cross-validation, for example, 3, 5, or 10:\n"
                        )))
+    return model_index, metric_index, folds
 
+
+def load_features():
+    """
+    Load pre-processed feature matrices.
+    """
+    Xs = np.load(INPUT_DIR + 'X.npz')
+    ys = np.load(INPUT_DIR + 'y.npz')
+    X_train, X_test = Xs['train'], Xs['test']
+    y_train, y_test = ys['train'], ys['test']
+
+    return X_train, X_test, y_train, y_test
+
+
+def tune(model, parameters, X_train, y_train, metric="roc_auc", n_folds=10,
+         default_args={}):
+    """
+    Use grid search and cross validation to find the best set of hyper-
+    parameters.
+    """
+    classifier = model(**default_args)
+    grid = GridSearchCV(classifier, param_grid=parameters, scoring=metric,
+                        n_jobs=-1, cv=n_folds, iid=True, verbose=5)
+
+    grid.fit(X_train, y_train)
+
+    return model(**grid.best_params_, **default_args), grid
+
+
+#----------------------------------------------------------------------------#
+if __name__ == "__main__":
+
+    model_index, metric_index, folds = ask()
     X_train, X_test, y_train, y_test = load_features()
 
     model = MODELS[model_index - 1]
@@ -136,15 +118,16 @@ if __name__ == "__main__":
     print("{} of the benchmark default decision tree model is {}.".\
           format(metric_name.title(), round(benchmark_scores.mean(), 4)))
 
-    best_classifier, grid = tune(model, *args, **op_args, **default_args)
+    best_classifier, grid = tune(model, *args, **op_args, default_args=default_args)
     print("Found the best set of parameters for {} Classifier: {}".\
           format(model_name, grid.best_params_))
 
     best_classifier.fit(X_train, y_train)
-    best_score = evaluate(best_classifier, X_test, y_test, metric=metric_name)
-    diff = round(best_score - benchmark_score, 3)
+    best_scores = cross_val_score(best_classifier, X_train, y_train,
+                                  scoring=metric_name, cv=folds)
+    diff = round(best_scores.mean() - benchmark_scores.mean(), 4)
     print("{} of the tuned {} is {}, {} {} than the benchmark.".\
-          format(metric_name, model_name, round(best_score, 3), diff,
+          format(metric_name, model_name, round(best_scores.mean(), 4), diff,
                  ['higher', 'lower'][int(diff <= 0)]))
 
     _ = input("Press any key to exit.")

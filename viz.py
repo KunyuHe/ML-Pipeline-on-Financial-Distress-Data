@@ -16,7 +16,7 @@ from matplotlib import colors
 
 
 INPUT_DIR = "./clean_data/"
-COLORS = list(colors.CSS4_COLORS.values())
+COLORS = list(sns.color_palette("Set3"))
 
 title = FontProperties()
 title.set_family('serif')
@@ -127,3 +127,22 @@ def corr_triangle(data, fig_size=(12, 8), sub=False, plot_title=""):
         ax.set_title(plot_title, fontproperties=axis)
     else:
         ax.set_title(plot_title, fontproperties=title)
+
+
+def box_plot(data):
+    """
+    Draw a box plot for every column of the data. (Credit to fellow student
+    Ziyu Ye)
+    """
+    sns.set(style='whitegrid')
+    n_cols = data.shape[1]
+    fig_cols = 2
+    fig_rows = n_cols // fig_cols
+    fig, axes = plt.subplots(nrows=fig_rows, ncols=fig_cols,
+                             figsize=[20, fig_rows * 4])
+
+    for i, col_name in enumerate(data.columns):
+        subdata = data[col_name]
+        sns.boxplot(subdata, ax=axes[i // fig_cols, i % fig_cols],
+                    color=random.choice(COLORS))
+    sns.despine()
