@@ -6,7 +6,25 @@
 [![codecov](https://codecov.io/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/branch/master/graph/badge.svg)](https://codecov.io/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
 
-## Introduction
+## 0. To Reproduce My Results
+
+Folk and clone the repository to your local machine.
+
+### 0.1 Windows
+
+```
+$ chmod u+x run.sh
+$ run.sh
+```
+
+### 0.2 Unix/Linux
+
+```
+$ chmod +x script.sh
+$ ./run.sh
+```
+
+## 1. Introduction
 
 The task is to build a pipeline that predicts whether an individual will experience financial distress (experience 90 days past due delinquency or worse) in the next two years, based on income, household and credit history of that person.
 
@@ -23,26 +41,30 @@ The pipeline currently supports **three classification algorithms** (KNN, Decisi
 
 Details would be covered in the following sections.
 
-## Get Data
+## 2. Get Data
 
-Data is downloaded from the UChicago canvas website as given. It is stored in the `./data/` directory as `credit-data.csv` and `Data Dictionary.xls`.
+*  Output Directory: `./data/`
 
-## Read Data
+Data is manually downloaded from the UChicago canvas website as given. It is stored in the `./data/` directory as `credit-data.csv` and `Data Dictionary.xls`.
 
-Input Directory: `./data/`
-Output Directory: `./clean_data/`
-Script: [etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/etl.py)
-Test Script: [test_etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_etl.py)
+## 3. Read Data
+
+*  Input Directory: `./data/`
+*  Output Directory: `./clean_data/`
+*  Script: [etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/etl.py)
+*  Test Script: [test_etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_etl.py)
 
 As data comes as CSV, I used `Pandas` to read it into Python. Meanwhile, data types are given in the data dictionary, but not in a form that `Pandas` would understand. So in module `etl.py` I include two functions, one that translates data types in the data dictionary to a `Pandas` data type ("int", "float", or "object") and stores them into a `.json` file, and another that read the data, **fill missing values with column median**.
 
-## Explore Data
+## 4. Explore Data
 
-Input Directory: `./clean_data/`
-Notebook: [Data Exploration.ipynb](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
-Script: [viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/viz.py)
-Test Script: [test_viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_viz.py)
+*  Input Directory: `./clean_data/`
+*  Notebook: [Data Exploration.ipynb](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
+*  Script: [viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/viz.py)
+*  Test Script: [test_viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_viz.py)
 
-**Try the interactive Jupyter Notebook supported by binder if you click on the badge above**! For the EDA process, I generated
+**Try the interactive Jupyter Notebook supported by binder if you click on the badge above**!
+
+For the EDA process, I generated
 barplots for the categorical variables, and used histograms to show the distributions of variables. I also drawed a correlation triangle to show the correlations between them, and did a panel of box plots to find outliers.
 
