@@ -12,16 +12,16 @@ Folk and clone the repository to your local machine. Change you working director
 
 ### 0.1 Windows
 
-```
-$ chmod u+x run.sh
-$ run.sh
+```console
+chmod u+x run.sh
+run.sh
 ```
 
 ### 0.2 Unix/Linux
 
-```
-$ chmod +x script.sh
-$ ./run.sh
+```console
+chmod +x script.sh
+./run.sh
 ```
 
 ## 1. Introduction
@@ -43,25 +43,25 @@ Details would be covered in the following sections.
 
 ## 2. Get Data
 
-*  Output Directory: `./data/`
+*   Output Directory: `./data/`
 
 Data is manually downloaded from the UChicago canvas website as given. It is stored in the `./data/` directory as `credit-data.csv` and `Data Dictionary.xls`.
 
 ## 3. Read Data
 
-*  Input Directory: `./data/`
-*  Output Directory: `./clean_data/`
-*  Code Script: [etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/etl.py)
-*  Test Script: [test_etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_etl.py)
+*   Input Directory: `./data/`
+*   Output Directory: `./clean_data/`
+*   Code Script: [etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/etl.py)
+*   Test Script: [test_etl.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_etl.py)
 
 As data comes as CSV, I used `Pandas` to read it into Python. Meanwhile, data types are given in the data dictionary, but not in a form that `Pandas` would understand. So in module `etl.py` I include two functions, one that translates data types in the data dictionary to a `Pandas` data type ("int", "float", or "object") and stores them into a `.json` file, and another that read the data, **fill missing values with column median**.
 
 ## 4. Explore Data
 
-*  Input Directory: `./clean_data/`
-*  Notebook: [Data Exploration.ipynb](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
-*  Code Script: [viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/viz.py)
-*  Test Script: [test_viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_viz.py)
+*   Input Directory: `./clean_data/`
+*   Notebook: [Data Exploration.ipynb](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
+*   Code Script: [viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/viz.py)
+*   Test Script: [test_viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_viz.py)
 
 **Try the interactive Jupyter Notebook supported by binder if you click on the badge above**!
 
@@ -73,13 +73,13 @@ As I've filled in the missing values in the `Read Data` phase, I skipped this pa
 
 ## 6. Generate Features/Predictors
 
-*  Input Directory: `./clean_data/`
-*  Output Directory: `./processed_data/`
-*  Code Script: [featureEngineering.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/featureEngineering.py)
+*   Input Directory: `./clean_data/`
+*   Output Directory: `./processed_data/`
+*   Code Script: [featureEngineering.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/featureEngineering.py)
 *  Test Script: [test_featureEngineering.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_featureEngineering.py)
 
 For the algorithms this pipeline currently supports, there's no need to transform all categorical variables into dummies, but only those without inherent ordering. So I transformed the categorical variable `zipcode` into a set of dummies. I also applied a function that can discretize continuous variables on variable `age` and turned it into a five-level ordinal variable. I used all of the resulting independent variables as my features and extracted the target `SeriousDlqin2yrs`.
 
 I used the method of cross-validation to evaluate models in the pipeline. As feature scaling is crucial for KNN, and would make the training process of Decision Tree and Random Forest faster, **user can choose to use either StandardScaler or MinMaxScaler to normalize the features matrix**. Both features matrix and target vector is stored as `.npz` file for future use.
 
-### 7. Build and Evaluate Classifier
+## 7. Build and Evaluate Classifier
