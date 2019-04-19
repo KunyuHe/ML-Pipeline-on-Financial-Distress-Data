@@ -10,7 +10,7 @@ import os
 
 from viz import read_clean_data
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
 INPUT_DIR = "./clean_data/"
@@ -20,6 +20,7 @@ TO_DESCRETIZE = ['age']
 TO_ONE_HOT = ['zipcode']
 TARGET = 'SeriousDlqin2yrs'
 TO_DROP = ['PersonID', 'SeriousDlqin2yrs']
+SCALERS = [StandardScaler, MinMaxScaler]
 
 
 #----------------------------------------------------------------------------#
@@ -43,33 +44,6 @@ def one_hot(data, cat_vars):
     return data
 
 
-def split(processed_data, test_size=0.25, random_state=123):
-    """
-    Split the processed data (after discretizing and one-hot encoding) into
-    training and testing set and wait for scaling.
-    """
-    y = processed_data[TARGET].values.astype(float)
-    for var in TO_DROP:
-        processed_data.drop(var, axis=1, inplace=True)
-    X = processed_data.values.astype(float)
-
-    return train_test_split(X, y, test_size=test_size,
-                            random_state=random_state)
-
-
-def feature_scaling(X_train, X_test, scaler=StandardScaler()):
-    """
-    Fit and transform training features with the desired scaler and use the
-    trained scaler to transform the test features.
-    """
-    sc_X = scaler
-
-    X_train = sc_X.fit_transform(X_train)
-    X_test = sc_X.transform(X_test)
-
-    return X_train, X_test
-
-
 #----------------------------------------------------------------------------#
 if __name__ == "__main__":
 
@@ -85,14 +59,21 @@ if __name__ == "__main__":
     print("Finished one-hot encoding the following categorical variables: {}".\
           format(TO_ONE_HOT))
 
-    X_train, X_test, y_train, y_test = split(processed_data)
-    X_train, X_test = feature_scaling(X_train, X_test)
-    print(("Finished extracting the target and scaling the features, and"
-           " split them into training and testing sets."))
+    y_train = processed_data[TARGET].values.astype(float)
+    for var in TO_DROP:
+        processed_data.drop(var, axis=1, inplace=True)
+    X_train = processed_data.values.astype(float)
+
+    scaler_index = int(input(("Up till now we support:\n"
+                              "1. StandardScaler\n"
+                              "2. MinMaxScaler\n"
+                              "Please input a scaler index (1 or 2):\n")))
+    X_train = SCALERS[scaler_index - 1]().fit_transform(X_train)
+    print("Finished extracting the target and scaling the features.")
 
     if "processed_data" not in os.listdir():
         os.mkdir("processed_data")
-    np.savez(OUTPUT_DIR + 'X.npz', train=X_train, test=X_test)
-    np.savez(OUTPUT_DIR + 'y.npz', train=y_train, test=y_test)
+    np.savez(OUTPUT_DIR + 'X.npz', train=X_train, test=None)
+    np.savez(OUTPUT_DIR + 'y.npz', train=y_train, test=None)
     print(("Saved the resulting NumPy matrices to directory {}. Features are"
            " in 'X.npz' and target is in 'y.npz'.").format(OUTPUT_DIR))
