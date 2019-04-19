@@ -9,7 +9,6 @@ import numpy as np
 import os
 
 from viz import read_clean_data
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 

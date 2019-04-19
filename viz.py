@@ -12,7 +12,6 @@ import seaborn as sns
 import numpy as np
 
 from matplotlib.font_manager import FontProperties
-from matplotlib import colors
 
 
 INPUT_DIR = "./clean_data/"
@@ -138,8 +137,8 @@ def box_plot(data):
     n_cols = data.shape[1]
     fig_cols = 2
     fig_rows = n_cols // fig_cols
-    fig, axes = plt.subplots(nrows=fig_rows, ncols=fig_cols,
-                             figsize=[20, fig_rows * 4])
+    _, axes = plt.subplots(nrows=fig_rows, ncols=fig_cols,
+                           figsize=[20, fig_rows * 4])
 
     for i, col_name in enumerate(data.columns):
         subdata = data[col_name]

@@ -5,10 +5,8 @@ Author:      Kunyu He, CAPP'20
 """
 
 import numpy as np
-import sys
 
 from sklearn.model_selection import cross_val_score, GridSearchCV
-from sklearn.metrics import roc_curve, auc, accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
