@@ -10,7 +10,7 @@ import pytest
 import pandas as pd
 
 
-subprocess.call('python3 etl.py', shell=True)
+subprocess.call('python etl.py', shell=True)
 
 TEST_DIR = "./clean_data/"
 
