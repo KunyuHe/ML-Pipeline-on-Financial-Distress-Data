@@ -5,10 +5,12 @@ Author:      Kunyu He, CAPP'20
 """
 
 import os
+import subprocess
 import pytest
-import etl
 import pandas as pd
 
+
+subprocess.call('python3 etl.py', shell=True)
 
 TEST_DIR = "./clean_data/"
 
@@ -37,7 +39,6 @@ def test_file_accessible(file_name):
     """
     Test whether the data file is accessible for further anaylysis.
     """
-    etl.go()
     check_file(TEST_DIR + file_name)
 
 
@@ -46,7 +47,6 @@ def test_no_missing(file_name):
     """
     Test whether there are no missing value in the clean data.
     """
-    etl.go()
     data = pd.read_csv(TEST_DIR + file_name)
     if not all(data.isnull().sum() == 0):
         raise AssertionError()
