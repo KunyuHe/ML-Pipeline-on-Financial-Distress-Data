@@ -5,96 +5,104 @@ Author:      Kunyu He, CAPP'20
 """
 
 import json
-import pandas as pd
-import matplotlib.pyplot as plt
 import random
 import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
 
 from matplotlib.font_manager import FontProperties
 
 
-INPUT_DIR = "./clean_data/"
-COLORS = list(sns.color_palette("Set3"))
-
-title = FontProperties()
-title.set_family('serif')
-title.set_size(14)
-title.set_weight("semibold")
-
-axis = FontProperties()
-axis.set_family('serif')
-axis.set_size(12)
-axis.set_weight("roman")
-
-ticks = FontProperties()
-ticks.set_family('serif')
-ticks.set_size(10)
-
-sns.set(style="white")
+INPUT_DIR = "../clean_data/"
+COLORS = list(sns.color_palette("Set2")) + list(sns.color_palette("Set3"))
+TITLE = FontProperties(family='serif', size=14, weight="semibold")
+AXIS = FontProperties(family='serif', size=12)
+TICKS = FontProperties(family='serif', size=10)
 
 
 #----------------------------------------------------------------------------#
-def read_clean_data():
+def read_clean_data(data_dictonary, data_file, dir_path=INPUT_DIR):
     """
     Read cleaned credit data in the .csv file with specific data types from
     the .json file.
+
+    Inputs:
+        - data_dictonary (string): name of the data dictionary.
+        - data_file (string): name of the data file.
+
+    Returns:
+        (DataFrame) clean data set with correct data types
     """
-    with open(INPUT_DIR + "data_type.json") as file:
+    with open(dir_path + data_dictonary) as file:
         data_types = json.load(file)
-    return pd.read_csv(INPUT_DIR + "credit-clean.csv", dtype=data_types)
+    return pd.read_csv(dir_path + data_file, dtype=data_types)
 
 
-def bar_plot(ax, ds, col="#1f77b4", sub=True, plot_title=None,
-             xlabel=None, ylabel=None, x_ticks=None, xtick_rotation=None,
-             annotate=True):
+def bar_plot(ax, data, column, sub=True, labels=["", "", ""], x_tick=[None, None]):
     """
+    Create a bar plot from a categorical vairable in the data set.
+
+    Inputs:
+        - ax (axes): axes instance to draw the plot on
+        - data (DataFrame): to extract the categotical column from
+        - column (string): name of the categorical column
+        - sub (bool): whether the plot is a subplot
+        - labels (list of strings): [title, xlabel, ylabel]
+        - x_tick (list): [[x-axis tick labels], horizontal or vertical]
+
+    Returns:
+        None
     """
-    if sub:
-        ax.set_title(plot_title, fontproperties=axis)
-    else:
-        ax.set_title(plot_title, fontproperties=title)
+    sns.countplot(x=column, data=data, palette="Set3", ax=ax, edgecolor='black')
 
-    ax.bar(range(len(ds)), ds, 0.4, color=col, edgecolor=["black"] * len(ds))
+    plot_title, xlabel, ylabel = labels
+    x_ticks, xtick_rotation = x_tick
+    ax.set_title(plot_title, fontproperties=[TITLE, AXIS][int(sub)])
+    ax.set_xlabel(xlabel, fontproperties=AXIS)
+    ax.set_ylabel(ylabel, fontproperties=AXIS)
+    if x_ticks:
+        ax.set_xticklabels(x_ticks, fontproperties=TICKS, rotation=xtick_rotation)
 
-    ax.set_xlabel(xlabel, fontproperties=axis)
-    ax.set_ylabel(ylabel, fontproperties=axis)
-    ax.set_xticks(range(len(ds)))
-    if not x_ticks:
-        x_ticks = ds.index
-    ax.set_xticklabels(x_ticks, fontproperties=ticks, rotation=xtick_rotation)
-
-    if annotate:
-        rects = ax.patches
-        i = 0
-        for rect in rects:
-            y_value = rect.get_height()
-            x_value = rect.get_x() + rect.get_width() / 2
-            ax.annotate(ds[i], (x_value, y_value), xytext=(0, 5),
-                        textcoords="offset points", ha='center', va='bottom',
-                        fontproperties=ticks)
-            i +=1
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+        ax.annotate(y_value, (x_value, y_value), xytext=(0, 5),
+                    textcoords="offset points", ha='center', va='bottom',
+                    fontproperties=TICKS)
 
 
 def hist_plot(ax, ds, col, cut=False):
     """
-    Create a histogram for a specific variable.
+    Create a histogram for a specific continuous variable.
+
+    Inputs:
+        - ax (axes): axes instance to draw the plot on
+        - ds (Series): the series of the continuous variable
+        - col (string): color to use for the histogram
+        - cut (bool): whether to cut off the largest 5% of observations
+
+    Returns:
+        None
     """
-    if cut:
-        xlim = (ds.min(), ds.quantile(0.95))
-    else:
-        xlim = (ds.min(), ds.max())
+    xlim = (ds.min(), [ds.max(), ds.quantile(0.95)][int(cut)])
     ax.hist(ds, range=xlim, edgecolor='black', color=col)
 
-    ax.set_xlabel(ds.name.title(), fontproperties=axis)
-    ax.set_ylabel("Frequency", fontproperties=axis)
+    ax.set_xlabel(ds.name.title(), fontproperties=AXIS)
+    ax.set_ylabel("Frequency", fontproperties=AXIS)
 
 
 def hist_panel(data, panel_title="", cut=False):
     """
     Plot a panel of histograms showing the distribution of variables, with two
     histograms in a row, a fixed width of 20, and a fixed height per histogram
-    of 4. The colors are randomly chosen from matplotlib.colors.CSS4_COLORS.
+    of 4. The colors are randomly chosen from the seaborn color palette "Set3".
+
+    Inputs:
+        - data (DataFrame): a matrix of numerical variables
+
+    Returns:
+        None
     """
     count = data.shape[1]
     rows = count // 2
@@ -105,12 +113,21 @@ def hist_panel(data, panel_title="", cut=False):
         ax_sub = fig.add_subplot(rows, 2, i + 1)
         hist_plot(ax_sub, data.iloc[:, i], random.choice(COLORS), cut)
 
-    fig.suptitle(panel_title, fontproperties=title)
+    fig.suptitle(panel_title, fontproperties=TITLE)
 
 
-def corr_triangle(data, fig_size=(12, 8), sub=False, plot_title=""):
+def corr_triangle(ax, data, sub=False, plot_title=""):
     """
     Plot a correlation triangel.
+
+    Inputs:
+        - ax (axes): axes instance to draw the plot on
+        - data (DataFrame): a matrix of numerical variables
+        - sub (bool): whether the plot is a subplot
+        - plot_title (string): title of the triangle
+
+    Returns:
+        None
     """
     corr = data.corr()
 
@@ -118,22 +135,21 @@ def corr_triangle(data, fig_size=(12, 8), sub=False, plot_title=""):
     mask[np.triu_indices_from(mask)] = True
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
 
-    _, ax = plt.subplots(figsize=fig_size)
-    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0,
-                square=True, linewidths=.5, cbar_kws={"shrink": .5})
-
-    if sub:
-        ax.set_title(plot_title, fontproperties=axis)
-    else:
-        ax.set_title(plot_title, fontproperties=title)
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=1, center=0, square=True,
+                linewidths=.5, cbar_kws={"shrink": .5}, ax=ax)
+    ax.set_title(plot_title, fontproperties=[TITLE, AXIS][int(sub)])
 
 
 def box_plot(data):
     """
-    Draw a box plot for every column of the data. (Credit to fellow student
-    Ziyu Ye)
+    Draw a box plot for every column of the data.
+
+    Inputs:
+        - data (DataFrame): a matrix of numerical variables
+
+    Returns:
+        None
     """
-    sns.set(style='whitegrid')
     n_cols = data.shape[1]
     fig_cols = 2
     fig_rows = n_cols // fig_cols

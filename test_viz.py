@@ -4,35 +4,34 @@ Description: Test code for checking functions for visualization.
 Author:      Kunyu He, CAPP'20
 """
 
-import json
-import pandas as pd
 import pytest
-import viz
+import pandas as pd
 import matplotlib.pyplot as plt
+
+import viz
 
 
 INPUT_DIR = "./clean_data/"
 NON_NUMERIC = ["PersonID", "zipcode", "SeriousDlqin2yrs"]
 
-with open(INPUT_DIR + "data_type.json") as file:
-    data_types = json.load(file)
-data = pd.read_csv(INPUT_DIR + "credit-clean.csv", dtype=data_types)
+data = viz.read_clean_data("data_types.json", "credit-clean.csv",
+                           dir_path=INPUT_DIR)
 target = data.SeriousDlqin2yrs
 numeric = data[[col for col in data.columns if col not in NON_NUMERIC]]
+nvt = pd.concat([target, numeric], axis=1)
 
-TEST_BAR = [target.value_counts(), data.zipcode.value_counts()]
-TEST_OTHERS = [(numeric, viz.hist_panel),
-               (pd.concat([target, numeric], axis=1), viz.corr_triangle)]
+TEST_BAR = [(data, 'SeriousDlqin2yrs'), (data, 'zipcode')]
+TEST_OTHER = [numeric]
 
 
 #----------------------------------------------------------------------------#
-@pytest.mark.parametrize("ds", TEST_BAR)
-def test_bar_plot(ds):
+@pytest.mark.parametrize("data,column", TEST_BAR)
+def test_bar_plot(data,column):
     """
     Test whether the bar plotting works fine.
     """
     _, ax = plt.subplots()
-    viz.bar_plot(ax, ds)
+    viz.bar_plot(ax, data, column)
 
     if not plt.gcf().number == 1:
         raise AssertionError()
@@ -40,13 +39,26 @@ def test_bar_plot(ds):
     plt.close('all')
 
 
-@pytest.mark.parametrize("data, fn", TEST_OTHERS)
-def test_others(data, fn):
+@pytest.mark.parametrize("data", TEST_OTHER)
+def test_hists(data):
     """
-    Test whether the histogram panel plotting and correlation triangle
-    plotting work fine.
+    Test whether the histogram panel plotting works fine.
     """
-    fn(data)
+    viz.hist_panel(data)
+
+    if not plt.gcf().number == 1:
+        raise AssertionError()
+
+    plt.close('all')
+
+
+@pytest.mark.parametrize("data", TEST_OTHER)
+def test_corr(data):
+    """
+    Test whether the correlation triangle plotting works fine.
+    """
+    _, ax = plt.subplots()
+    viz.corr_triangle(ax, data)
 
     if not plt.gcf().number == 1:
         raise AssertionError()
