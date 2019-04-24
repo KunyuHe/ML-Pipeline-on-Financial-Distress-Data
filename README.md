@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data.svg?branch=master)](https://travis-ci.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data)
 [![Maintainability](https://api.codeclimate.com/v1/badges/d9e3f244250a2f44e012/maintainability)](https://codeclimate.com/github/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/maintainability)
 [![codecov](https://codecov.io/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/branch/master/graph/badge.svg)](https://codecov.io/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data)
+[![Documentation Status](https://readthedocs.org/projects/pydocstyle/badge/?version=stable)](http://www.pydocstyle.org/en/stable/?badge=stable)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
 
 ## 0. To Reproduce My Results
@@ -32,10 +33,9 @@ The pipeline has six components:
 
 1.  Read Data
 2.  Explore Data
-3.  Pre-Process Data
-4.  Generate Features/Predictors
-5.  Build Classifier
-6.  Evaluate Classifier
+3.  Generate Features/Predictors
+4.  Build Classifier
+5.  Evaluate Classifier
 
 The pipeline currently supports **three classification algorithms** (KNN, Decision Tree, and Random Forest), and use grid search and cross validation to find the best model for the future in terms of either of the **two evaluation metrics** (Accuracy or Area Under the Receiver Operating Characteristic Curve).
 
@@ -46,6 +46,8 @@ Details would be covered in the following sections.
 *   Output Directory: `./data/`
 
 Data is manually downloaded from the UChicago canvas website as given. It is stored in the `./data/` directory as `credit-data.csv` and `Data Dictionary.xls`.
+
+There are 41016 observations and 12 original features in the data set. A list of the features and corresponding descriptions are available in the [data dictionary](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/data/Data%20Dictionary.xls?raw=true).
 
 ## 3. Read Data
 
@@ -59,30 +61,37 @@ As data comes as CSV, I used `Pandas` to read it into Python. Meanwhile, data ty
 ## 4. Explore Data
 
 *   Input Directory: `./clean_data/`
+*   Output Directory: `./images/`
 *   Notebook: [Data Exploration.ipynb](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
 *   Code Script: [viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/viz.py)
 *   Test Script: [test_viz.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_viz.py)
 
 **Try the interactive Jupyter Notebook supported by binder if you click on the badge above**!
 
-For the EDA process, I generated barplots for the categorical variables, and used histograms to show the distributions of variables. I also drawed a correlation triangle to show the correlations between them, and did a panel of box plots to find the outliers.
+For the EDA process, I generated barplots for the categorical variables, and used histograms to show the distributions of variables. I also drawed a correlation triangle to show the correlations between them, and did a panel of box plots to find the outliers. The images are saved in the `./images/` directory.
 
-## 5. Pre-Process Data
-
-As I've filled in the missing values in the `Read Data` phase, I skipped this part for now.
-
-## 6. Generate Features/Predictors
+## 5. Feature Engineering
 
 *   Input Directory: `./clean_data/`
 *   Output Directory: `./processed_data/`
 *   Code Script: [featureEngineering.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/featureEngineering.py)
 *   Test Script: [test_featureEngineering.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/test_featureEngineering.py)
 
+I've filled in the missing values in the `Read Data` phase. In this part, I got rid of the outliers and generate some new features.
+
+![](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/EDA/images/figure-3.png)
+
+As observed above, there are two large exterme values in `MonthlyIncome` and `DebtRatio`, hence I drop those observations from the data set.
+
+![](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/EDA/images/figure-2.png)
+
+Also, as number of times borrower go past due in the last 2 years are strongly correlated, I transformed them into binaries and combine those dummies to generate a new feature `PastDue`. `PastDue` is ordinal and indicates the degree of the individual's past financial distress. While 0 indicates he has never been past due for over 30 days in the past two years, 3 indicates he at least once experienced 90 days past due delinquency or worse.
+
 For the algorithms this pipeline currently supports, there's no need to transform all categorical variables into dummies, but only those without inherent ordering. So I transformed the categorical variable `zipcode` into a set of dummies. I also applied a function that can discretize continuous variables on variable `age` and turned it into a five-level ordinal variable. I used all of the resulting independent variables as my features and extracted the target `SeriousDlqin2yrs`.
 
 I used the method of cross-validation to evaluate models in the pipeline. As feature scaling is crucial for KNN, and would make the training process of Decision Tree and Random Forest faster, **user can choose to use either `StandardScaler` or `MinMaxScaler` to normalize the features matrix**. Both features matrix and target vector is stored as `.npz` file for future use.
 
-## 7. Build and Evaluate Classifier
+## 6. Build and Evaluate Classifier
 
 *   Input Directory: `./processed_data/`
 *   Code Script: [train.py](https://github.com/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/blob/master/train.py)
@@ -92,6 +101,6 @@ For the training and evaluation part, I built the benchmark with a default sciki
 
 For each of the classifiers that the pipline supports, I pre-set a few default paramters (`random_state`, `n_estimators`...) and designed a grid of parameters for model tuning. After users choose a model, a evaluation metrics, and number of cross-validation folds, **the program would build the benchmark, instantiate a classifier and exhaustively search over the specified grid to find the best set of paramter values in terms of cross-validation scoring for it, and fit it with the best set of parameters. It would further print the average cross-validation score and compare it with that of the benchmark model.**
 
-## 8. Results
+## 7. Results
 
 The result depends largely on user's choices. For example, in one run the user choose to use the `StandardScaler`, train a `DecisionTreeClassifier`, with `Accuracy` as the evaluation metrics, and do a `5-fold` cross-validation. **The average cross-validation accuracy is 0.7034 for the benchmark classifier, 0.8739 for the tuned decision tree, which is higher by 0.1705.** It takes about 3 minutes for the program to finish running.
