@@ -26,7 +26,7 @@ TEST_OTHER = [numeric]
 
 #----------------------------------------------------------------------------#
 @pytest.mark.parametrize("data,column", TEST_BAR)
-def test_bar_plot(data,column):
+def test_bar_plot(data, column):
     """
     Test whether the bar plotting works fine.
     """
