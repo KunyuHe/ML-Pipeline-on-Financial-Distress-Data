@@ -6,11 +6,10 @@ Author:      Kunyu He, CAPP'20
 
 import numpy as np
 import itertools
+import warnings
 
 from matplotlib.font_manager import FontProperties
 from sklearn.model_selection import cross_val_predict, StratifiedKFold
-
-from sklearn.model_selection import cross_val_score, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -21,6 +20,7 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
 
 from viz import plot_predicted_scores, plot_precision_recall
 
+warnings.filterwarnings("ignore")
 
 INPUT_DIR = "../processed_data/"
 OUTPUT_DIR = "../log/"
@@ -50,7 +50,7 @@ GRID_SEARCH_PARAMS = {"KNN": {
 
                       "Decision Tree": {
                             'criterion': ["entropy", "gini"],
-                            'min_samples_split': list(np.arange(0.01, 0.06, 0.01)),
+                            'min_samples_split': list(np.arange(0.02, 0.05, 0.01)),
                             'max_depth': list(range(4, 11)),
                             'max_features': list(range(4, 15, 2))
                             },
@@ -71,7 +71,7 @@ DEFAULT_ARGS = {"KNN": {'n_jobs': -1},
                 "Logistic Regression": {'random_state': SEED},
                 "Decision Tree": {'random_state': SEED},
                 "Linear SVM": {'random_state': SEED},
-                "Random Forest": {'n_estimators': 500, 'random_state': SEED,
+                "Random Forest": {'n_estimators': 300, 'random_state': SEED,
                                   'oob_score': True}}
 
 
@@ -88,7 +88,7 @@ def ask():
     print(("Up till now we use the following metrics to evaluate the"
            " fitted classifiers on the validation and test set.\n"))
     for i in range(len(METRICS)):
-        print("{}. {}".format(i, METRICS[i].title()))
+        print("{}. {}".format(i, METRICS_NAMES[i].title()))
     metric_index = int(input("Please input a metrics index:\n"))
 
     return model_index, metric_index
@@ -120,10 +120,10 @@ def build_benchmark(data, metric_index):
     benchmark = DecisionTreeClassifier(**DEFAULT_ARGS["Decision Tree"])
     benchmark.fit(X_train, y_train)
     predicted_probs = benchmark.predict_proba(X_test)[:, 1]
-    benchmark_score = METRICS[metric_index - 1](y_test, benchmark.predict(X_test))
+    benchmark_score = METRICS[metric_index](y_test, benchmark.predict(X_test))
 
     print("{} of the benchmark default decision tree model is {:.4f}.\n".\
-          format(METRICS_NAMES[metric_index - 1], round(benchmark_score, 4)))
+          format(METRICS_NAMES[metric_index], round(benchmark_score, 4)))
 
     return benchmark_score
 
@@ -158,7 +158,7 @@ def cross_validation(clf, skf, data, metric_index, threshold):
         predicted_labels = np.where(predicted_prob > threshold, 1, 0)
 
         predicted_probs.append(predicted_prob)
-        scores.append(METRICS[metric_index - 1](y_val, predicted_labels))
+        scores.append(METRICS[metric_index](y_val, predicted_labels))
 
     return list(itertools.chain(*predicted_probs)), np.array(scores).mean()
 
@@ -167,11 +167,11 @@ def find_best_threshold(model_index, metric_index, train_data,
                         verbose=False, plot=False):
     """
     """
-    model_name = MODEL_NAMES[model_index - 1]
-    metric_name = METRICS_NAMES[metric_index - 1]
+    model_name = MODEL_NAMES[model_index]
+    metric_name = METRICS_NAMES[metric_index]
     default_args = DEFAULT_ARGS[model_name]
 
-    clf = MODELS[model_index - 1](**default_args)
+    clf = MODELS[model_index](**default_args)
     skf = StratifiedKFold(n_splits=5, random_state=SEED)
 
     if plot:
@@ -199,8 +199,8 @@ def tune(model_index, metric_index, train_data, best_threshold,
     parameters.
 
     """
-    model_name = MODEL_NAMES[model_index - 1]
-    metric_name = METRICS_NAMES[metric_index - 1]
+    model_name = MODEL_NAMES[model_index]
+    metric_name = METRICS_NAMES[metric_index]
     params_grid = GRID_SEARCH_PARAMS[model_name]
     default_args = DEFAULT_ARGS[model_name]
 
@@ -212,7 +212,7 @@ def tune(model_index, metric_index, train_data, best_threshold,
                                                                  best_threshold))
     for grid in itertools.product(*(params_grid[param] for param in params)):
         args = dict(zip(params, grid))
-        clf = MODELS[model_index - 1](**default_args, **args)
+        clf = MODELS[model_index](**default_args, **args)
         _, grid_score = cross_validation(clf, skf, train_data, metric_index, best_threshold)
 
         if grid_score > best_score:
@@ -230,16 +230,16 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
     """
     """
     X_train, X_test, y_train, y_test = data
-    model_name = MODEL_NAMES[model_index - 1]
-    metric_name = METRICS_NAMES[metric_index - 1]
+    model_name = MODEL_NAMES[model_index]
+    metric_name = METRICS_NAMES[metric_index]
     default_args = DEFAULT_ARGS[model_name]
 
-    clf = MODELS[model_index - 1](**default_args, **best_grid)
+    clf = MODELS[model_index](**default_args, **best_grid)
     clf.fit(X_train, y_train)
 
     predicted_prob = clf_predict_proba(clf, X_test)
     predicted_labels = np.where(predicted_prob > best_threshold, 1, 0)
-    test_score = METRICS[metric_index - 1](y_test, predicted_labels)
+    test_score = METRICS[metric_index](y_test, predicted_labels)
     print(("Our {} classifier reached a(n) {} of {:.4f} with a decision"
            " threshold of {} on the test set.\n").format(model_name, metric_name,
                                                        test_score, best_threshold))
@@ -255,8 +255,8 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
 def train_evaluate(model_index, metric_index, data, train_data):
     """
     """
-    metric_name = METRICS[metric_index - 1]
-    model_name = MODEL_NAMES[model_index - 1]
+    metric_name = METRICS_NAMES[metric_index]
+    model_name = MODEL_NAMES[model_index]
 
     benchmark_score = build_benchmark(data, metric_index)
     best_threshold = find_best_threshold(model_index, metric_index,
@@ -264,11 +264,11 @@ def train_evaluate(model_index, metric_index, data, train_data):
     best_grid, _ = tune(model_index, metric_index, train_data, best_threshold,
                         verbose=True)
     test_score = evaluate_best_model(model_index, metric_index, best_threshold,
-                                     best_grid, data, plot=False, verbose=True)
+                                     best_grid, data, plot=True, verbose=True)
 
     diff = test_score - benchmark_score
     print(("{} of the tuned {} is {}, {} {} than the benchmark.\n"
-           "*-------------------------------------------------------------\n\n").\
+           "**-------------------------------------------------------------**\n\n").\
            format(metric_name, model_name, round(test_score.mean(), 4), diff,
                   ['higher', 'lower'][int(diff <= 0)]))
 
@@ -276,7 +276,7 @@ def train_evaluate(model_index, metric_index, data, train_data):
 #----------------------------------------------------------------------------#
 if __name__ == "__main__":
 
-    print(("You can either choose to train with a specific configuration (input 1),",
+    print(("You can either choose to train with a specific configuration (input 1),"
            " or all the models by metrics we have (input 2)"))
     flag = int(input("Please input your choice:\n"))
 

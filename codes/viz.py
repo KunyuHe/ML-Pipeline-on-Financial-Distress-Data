@@ -195,6 +195,9 @@ def plot_predicted_scores(cv_scores):
     ax.set_title('Frequency Distribution of Predicted Scores', fontproperties=TITLE)
 
     fig.tight_layout()
+    plt.ion()
+    plt.pause(5)
+    plt.close()
 
 
 def plot_precision_recall(predicted_prob, y_test, prop):
@@ -228,3 +231,6 @@ def plot_precision_recall(predicted_prob, y_test, prop):
     ax2.set_ylim(0, 1.05)
 
     fig.tight_layout()
+    plt.ion()
+    plt.pause(5)
+    plt.close()
