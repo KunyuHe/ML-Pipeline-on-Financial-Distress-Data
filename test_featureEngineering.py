@@ -26,7 +26,7 @@ TEST_TO_BINARY = [{'NumberOfTime30-59DaysPastDueNotWorse': 0,
 
 #----------------------------------------------------------------------------#
 @pytest.mark.parametrize("file_name", TEST_ACCESS)
-def test_file_accessible(file_name):
+def test_accessiblity(file_name):
     """
     Test whether the output data files are accessible for further anaylysis.
     """
