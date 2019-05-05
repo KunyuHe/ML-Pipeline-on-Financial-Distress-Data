@@ -8,17 +8,17 @@ import numpy as np
 import itertools
 import warnings
 
-from matplotlib.font_manager import FontProperties
 from sklearn.model_selection import cross_val_predict, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import (RandomForestClassifier, AdaBoostClassifier,
+                              BaggingClassifier)
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, roc_auc_score)
 
-from viz import plot_predicted_scores, plot_precision_recall
+from viz import plot_predicted_scores, plot_precision_recall, plot_auc_roc
 
 warnings.filterwarnings("ignore")
 
@@ -26,9 +26,9 @@ INPUT_DIR = "../processed_data/"
 OUTPUT_DIR = "../log/"
 
 MODEL_NAMES = ["KNN", "Logistic Regression", "Decision Tree", "Linear SVM",
-               "Random Forest"]
+               "Bagging", "Boosting", "Random Forest"]
 MODELS = [KNeighborsClassifier, LogisticRegression, DecisionTreeClassifier,
-          LinearSVC, RandomForestClassifier]
+          LinearSVC, BaggingClassifier, AdaBoostClassifier, RandomForestClassifier]
 
 METRICS_NAMES = ["Accuracy", "Precision", "Recall", "F1 Score", "AUC ROC Score"]
 METRICS = [accuracy_score, precision_score, recall_score, f1_score, roc_auc_score]
@@ -44,8 +44,8 @@ GRID_SEARCH_PARAMS = {"KNN": {
 
                       "Logistic Regression": {
                                               'penalty': ['l1', 'l2'],
-                                              'C': [0.001, 0.01, 0.1, 1, 10, 100],
-                                              'solver': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']
+                                              'C': [0.001, 0.01, 0.1, 1, 10],
+                                              'solver': ['newton-cg', 'lbfgs', 'liblinear']
                                               },
 
                       "Decision Tree": {
@@ -60,6 +60,16 @@ GRID_SEARCH_PARAMS = {"KNN": {
                                      'C': [0.001, 0.01, 0.1, 1, 10]
                                      },
 
+                      "Bagging": {
+                                  'max_samples': [0.05, 0.1, 0.2, 0.5],
+                                  'max_features': list(range(4, 15, 2))
+                                  },
+
+                      "Boosting":{
+                                  'algorithm': {"SAMME", "SAMME.R"},
+                                  'learning_rate': [0.001, 0.01, 0.1, 0.5, 1, 10]
+                                  },
+
                       "Random Forest": {
                             'min_samples_split': list(np.arange(0.01, 0.06, 0.01)),
                             'max_depth': list(range(4, 11)),
@@ -70,9 +80,12 @@ GRID_SEARCH_PARAMS = {"KNN": {
 DEFAULT_ARGS = {"KNN": {'n_jobs': -1},
                 "Logistic Regression": {'random_state': SEED},
                 "Decision Tree": {'random_state': SEED},
-                "Linear SVM": {'random_state': SEED},
+                "Linear SVM": {'random_state': SEED, 'max_iter': 200},
+                "Bagging": {'n_estimators': 50, 'random_state': SEED,
+                            'oob_score': True, 'n_jobs': -1},
+                "Boosting": {'n_estimators': 100, 'random_state': SEED},
                 "Random Forest": {'n_estimators': 300, 'random_state': SEED,
-                                  'oob_score': True}}
+                                  'oob_score': True, 'n_jobs': -1}}
 
 
 #----------------------------------------------------------------------------#
@@ -153,7 +166,7 @@ def cross_validation(clf, skf, data, metric_index, threshold):
         try:
             clf.fit(X_tr, y_tr)
         except:
-            return None, 0.0
+            return None, 0
         predicted_prob = clf_predict_proba(clf, X_val)
         predicted_labels = np.where(predicted_prob > threshold, 1, 0)
 
@@ -176,7 +189,7 @@ def find_best_threshold(model_index, metric_index, train_data,
 
     if plot:
         default_probs, _ = cross_validation(clf, skf, train_data, metric_index, 0.5)
-        plot_predicted_scores(default_probs)
+        plot_predicted_scores(default_probs, "({} -- {})".format(model_name, metric_name))
 
     best_score, best_threshold = 0, None
     print("Default {}. Search Starts:".format(model_name))
@@ -242,12 +255,15 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
     test_score = METRICS[metric_index](y_test, predicted_labels)
     print(("Our {} classifier reached a(n) {} of {:.4f} with a decision"
            " threshold of {} on the test set.\n").format(model_name, metric_name,
-                                                       test_score, best_threshold))
+                                                         test_score, best_threshold))
 
     if plot:
-        pos = np.count_nonzero(np.append(y_train, y_test))
-        prop = pos / (len(y_test) + len(y_train))
-        plot_precision_recall(predicted_prob, y_test, prop)
+        positives = np.count_nonzero(np.append(y_train, y_test))
+        baseline = positives / (len(y_test) + len(y_train))
+        plot_precision_recall(y_test, predicted_prob, baseline, "({} -- {})".\
+                              format(model_name, metric_name))
+
+        plot_auc_roc(clf, data, "({} -- {})".format(model_name, metric_name))
 
     return test_score
 
@@ -266,7 +282,7 @@ def train_evaluate(model_index, metric_index, data, train_data):
     test_score = evaluate_best_model(model_index, metric_index, best_threshold,
                                      best_grid, data, plot=True, verbose=True)
 
-    diff = test_score - benchmark_score
+    diff = round(test_score - benchmark_score, 4)
     print(("{} of the tuned {} is {}, {} {} than the benchmark.\n"
            "**-------------------------------------------------------------**\n\n").\
            format(metric_name, model_name, round(test_score.mean(), 4), diff,
@@ -288,8 +304,11 @@ if __name__ == "__main__":
         model_index, metric_index = ask()
         train_evaluate(model_index, metric_index, data, train_data)
     else:
-        for model_index in range(1, len(MODELS) + 1):
-            for metric_index in range(1, len(METRICS) + 1):
+        for model_index in range(len(MODELS)):
+            for metric_index in range(len(METRICS)):
+                print(("**-------------------------------------------------------------**\n"
+                       "Training for {} with metric {}.").format(MODEL_NAMES[model_index],
+                                                                 METRICS_NAMES[metric_index]))
                 train_evaluate(model_index, metric_index, data, train_data)
 
     _ = input("Press any key to exit.")
