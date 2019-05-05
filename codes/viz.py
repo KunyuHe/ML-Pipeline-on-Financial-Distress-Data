@@ -283,7 +283,10 @@ def plot_auc_roc(clf, data, title=""):
     y_test = label_binarize(y_test, classes=[0, 1, 2])
 
     classifier = OneVsRestClassifier(clf)
-    y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+    if hasattr(classifier, "decision_function"):
+        y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+    else:
+        y_score = classifier.fit(X_train, y_train).predict_proba(X_test)[:, 1]
 
     # Compute ROC curve and ROC area for binary classes
     fpr, tpr, roc_auc = dict(), dict(), dict()
