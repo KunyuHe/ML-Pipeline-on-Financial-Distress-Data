@@ -18,7 +18,7 @@ import numpy as np
 from matplotlib.font_manager import FontProperties
 from sklearn.preprocessing import label_binarize
 from sklearn.multiclass import OneVsRestClassifier
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, precision_recall_curve
 
 
 INPUT_DIR = "../data/"
@@ -279,8 +279,8 @@ def plot_auc_roc(clf, data, title=""):
     """
     """
     X_train, X_test, y_train, y_test = data
-    y_train = label_binarize(y_train, classes=[0, 1])
-    y_test = label_binarize(y_test, classes=[0, 1])
+    y_train = label_binarize(y_train, classes=[0, 1, 2])
+    y_test = label_binarize(y_test, classes=[0, 1, 2])
 
     classifier = OneVsRestClassifier(clf)
     y_score = classifier.fit(X_train, y_train).decision_function(X_test)
@@ -289,13 +289,13 @@ def plot_auc_roc(clf, data, title=""):
     fpr, tpr, roc_auc = dict(), dict(), dict()
     for i in range(N_CLASSES):
         fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
-        roc_auc[POSITIVE][i] = auc(fpr[i], tpr[i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
 
     # Compute micro-average ROC curve and ROC area
     fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
-    plt.figure()
+    fig, ax = plt.subplots()
     plt.plot(fpr[POSITIVE], tpr[POSITIVE], color='darkorange', lw=1.5,
              label='ROC curve (area = {:.4f})'.format(roc_auc[POSITIVE]))
     plt.plot([0, 1], [0, 1], color='navy', lw=1.5, linestyle='--')

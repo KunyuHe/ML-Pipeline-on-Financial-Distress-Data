@@ -22,8 +22,10 @@ from viz import plot_predicted_scores, plot_precision_recall, plot_auc_roc
 
 warnings.filterwarnings("ignore")
 
+
 INPUT_DIR = "../processed_data/"
 OUTPUT_DIR = "../log/"
+OUTPUT_FILE = "performances.csv"
 
 MODEL_NAMES = ["KNN", "Logistic Regression", "Decision Tree", "Linear SVM",
                "Bagging", "Boosting", "Random Forest"]
@@ -135,7 +137,7 @@ def build_benchmark(data, metric_index):
     predicted_probs = benchmark.predict_proba(X_test)[:, 1]
     benchmark_score = METRICS[metric_index](y_test, benchmark.predict(X_test))
 
-    print("{} of the benchmark default decision tree model is {:.4f}.\n".\
+    print("\n{} of the benchmark default decision tree model is {:.4f}.\n".\
           format(METRICS_NAMES[metric_index], round(benchmark_score, 4)))
 
     return benchmark_score
@@ -177,7 +179,7 @@ def cross_validation(clf, skf, data, metric_index, threshold):
 
 
 def find_best_threshold(model_index, metric_index, train_data,
-                        verbose=False, plot=False):
+                        verbose=True, plot=True):
     """
     """
     model_name = MODEL_NAMES[model_index]
@@ -206,7 +208,7 @@ def find_best_threshold(model_index, metric_index, train_data,
 
 
 def tune(model_index, metric_index, train_data, best_threshold,
-         n_folds=10, verbose=False):
+         n_folds=10, verbose=True):
     """
     Use grid search and cross validation to find the best set of hyper-
     parameters.
@@ -238,8 +240,29 @@ def tune(model_index, metric_index, train_data, best_threshold,
     return best_grid, best_score
 
 
+def precision_at_k(y_true, y_scores, k):
+    """
+    Generates the precision for a model. This function is
+    adapted from https://github.com/rayidghani/magicloops.
+
+    Inputs:
+        y_true: (Series) the true target value
+        y_scores: (Series) the scores for the model
+        k: (float) given threshold
+
+    Returns:
+        (Numpy Array) the calculated precisions
+    """
+    idx = np.argsort(np.array(y_scores))[::-1]
+    y_scores, y_true = np.array(y_scores)[idx], np.array(y_true)[idx]
+    cutoff_index = int(len(y_scores) * (k / 100.0))
+    preds_at_k = [1 if x < cutoff_index else 0 for x in range(len(y_scores))]
+
+    return precision_score(y_true, preds_at_k)
+
+
 def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, data,
-                        plot=False, verbose=True):
+                        plot=True, verbose=True, write=False, output=None):
     """
     """
     X_train, X_test, y_train, y_test = data
@@ -256,6 +279,16 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
     print(("Our {} classifier reached a(n) {} of {:.4f} with a decision"
            " threshold of {} on the test set.\n").format(model_name, metric_name,
                                                          test_score, best_threshold))
+    if write:
+        log = [model_name, best_threshold, best_grid, default_args]
+        log += [metric(y_test, predicted_labels) for metric in METRICS]
+
+        pred_prob_sorted, y_testsorted = zip(*sorted(zip(predicted_prob, y_test),
+                                                     reverse=True))
+        log += [precision_at_k(y_testsorted, pred_prob_sorted, threshold)
+                for threshold in THRESHOLDS]
+
+        output.append(log)
 
     if plot:
         positives = np.count_nonzero(np.append(y_train, y_test))
@@ -268,19 +301,25 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
     return test_score
 
 
-def train_evaluate(model_index, metric_index, data, train_data):
+def train_evaluate(model_index, metric_index, data, train_data,
+                   write=False, output=None):
     """
     """
     metric_name = METRICS_NAMES[metric_index]
     model_name = MODEL_NAMES[model_index]
 
+
     benchmark_score = build_benchmark(data, metric_index)
-    best_threshold = find_best_threshold(model_index, metric_index,
-                                         train_data, verbose=True, plot=True)
-    best_grid, _ = tune(model_index, metric_index, train_data, best_threshold,
-                        verbose=True)
-    test_score = evaluate_best_model(model_index, metric_index, best_threshold,
-                                     best_grid, data, plot=True, verbose=True)
+    best_threshold = find_best_threshold(model_index, metric_index, train_data)
+    best_grid, _ = tune(model_index, metric_index, train_data, best_threshold)
+
+    if write:
+        test_score = evaluate_best_model(model_index, metric_index,
+                                         best_threshold, best_grid, data,
+                                         write=True, output=output)
+    else:
+        test_score = evaluate_best_model(model_index, metric_index,
+                                         best_threshold, best_grid, data)
 
     diff = round(test_score - benchmark_score, 4)
     print(("{} of the tuned {} is {}, {} {} than the benchmark.\n"
@@ -304,11 +343,18 @@ if __name__ == "__main__":
         model_index, metric_index = ask()
         train_evaluate(model_index, metric_index, data, train_data)
     else:
+        header = ["Model", "Threshold", "Hyperparameters", "Default Parameters"]
+        header += METRICS_NAMES
+        header += ["p_at_{}".format(threshold) for threshold in THRESHOLDS]
+        logs = [header]
+
         for model_index in range(len(MODELS)):
             for metric_index in range(len(METRICS)):
                 print(("**-------------------------------------------------------------**\n"
                        "Training for {} with metric {}.").format(MODEL_NAMES[model_index],
                                                                  METRICS_NAMES[metric_index]))
-                train_evaluate(model_index, metric_index, data, train_data)
+                train_evaluate(model_index, metric_index, data, train_data,
+                               write=True, output=logs)
+                print(logs)
 
     _ = input("Press any key to exit.")
