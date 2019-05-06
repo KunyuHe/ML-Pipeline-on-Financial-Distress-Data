@@ -4,10 +4,11 @@ Description: Collection of functions to train the model.
 Author:      Kunyu He, CAPP'20
 """
 
-import numpy as np
 import itertools
 import warnings
 import pickle
+import csv
+import numpy as np
 
 from sklearn.model_selection import cross_val_predict, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
@@ -364,6 +365,9 @@ if __name__ == "__main__":
                                                                  METRICS_NAMES[metric_index]))
                 train_evaluate(model_index, metric_index, data, train_data,
                                write=True, output=logs)
-                print(logs)
+        
+    with open(OUTPUT_DIR + OUTPUT_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerows(set(logs))
 
     _ = input("Press any key to exit.")
