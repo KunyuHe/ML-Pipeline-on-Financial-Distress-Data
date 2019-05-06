@@ -7,6 +7,7 @@ Author:      Kunyu He, CAPP'20
 import numpy as np
 import itertools
 import warnings
+import pickle
 
 from sklearn.model_selection import cross_val_predict, StratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
@@ -18,7 +19,8 @@ from sklearn.ensemble import (RandomForestClassifier, AdaBoostClassifier,
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, roc_auc_score)
 
-from viz import plot_predicted_scores, plot_precision_recall, plot_auc_roc
+from viz import (plot_predicted_scores, plot_precision_recall, plot_auc_roc,
+                 plot_feature_importances)
 
 warnings.filterwarnings("ignore")
 
@@ -297,6 +299,13 @@ def evaluate_best_model(model_index, metric_index, best_threshold, best_grid, da
                               format(model_name, metric_name))
 
         plot_auc_roc(clf, data, "({} -- {})".format(model_name, metric_name))
+
+        if hasattr(clf, "feature_importances_"):
+            importances = clf.feature_importances_
+            with open(INPUT_DIR + 'col_names.pickle', 'rb') as handle:
+                col_names = pickle.load(handle)
+            plot_feature_importances(importances, col_names, title="({} -- {})".\
+                                     format(model_name, metric_name))
 
     return test_score
 

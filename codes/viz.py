@@ -9,7 +9,6 @@ Author:      Kunyu He, CAPP'20
 import os
 import json
 import random
-import time
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -286,7 +285,7 @@ def plot_auc_roc(clf, data, title=""):
     if hasattr(classifier, "decision_function"):
         y_score = classifier.fit(X_train, y_train).decision_function(X_test)
     else:
-        y_score = classifier.fit(X_train, y_train).predict_proba(X_test)[:, 1]
+        y_score = classifier.fit(X_train, y_train).predict_proba(X_test)
 
     # Compute ROC curve and ROC area for binary classes
     fpr, tpr, roc_auc = dict(), dict(), dict()
@@ -312,6 +311,40 @@ def plot_auc_roc(clf, data, title=""):
 
     figname = OUTPUT_DIR + "roc/" + "{}.png".format(title)
     plt.title('Receiver Operating Characteristic Curve\n' + title,
+              fontproperties=AXIS)
+    fig.savefig(figname, dpi=400)
+
+    fig.tight_layout()
+    plt.show(block=False)
+    plt.pause(3)
+    plt.close()
+
+
+def plot_feature_importances(importances, col_names, n=5, title=""):
+    """
+    Plot the feature importances of the decision tree. This credit to the
+    University of Michigan.
+
+    Inputs:
+        clf: the model
+        feature_names: (list) the list of strings to store feature names
+
+    Returns:
+        None
+    """
+    indices = np.argsort(importances)[::-1][:n]
+    labels = col_names[indices][::-1]
+
+    fig, ax = plt.subplots(figsize=[12, 8])
+    plt.barh(range(n), sorted(importances, reverse=True)[:n][::-1], color='g',
+             alpha=0.4, edgecolor=['black']*n)
+
+    plt.xlabel("Feature Importance", fontproperties=AXIS)
+    plt.ylabel("Feature Name", fontproperties=AXIS)
+    plt.yticks(np.arange(n), labels, fontproperties=AXIS)
+
+    figname = OUTPUT_DIR + "feature importance/" + "{}.png".format(title)
+    plt.title("Feature Importance: Top {}\n".format(n) + title,
               fontproperties=AXIS)
     fig.savefig(figname, dpi=400)
 

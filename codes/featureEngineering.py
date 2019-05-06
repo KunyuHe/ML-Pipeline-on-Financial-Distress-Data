@@ -6,11 +6,13 @@ Author:      Kunyu He, CAPP'20
 """
 
 import os
+import pickle
 import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
 from viz import read_data
 
 
@@ -142,14 +144,13 @@ def one_hot(data, cat_vars):
     return data
 
 
-def split(data, to_drop, test=True, split_params=SPLIT_PARAMS):
+def split(data, test=True, split_params=SPLIT_PARAMS):
     """
     Drop rows with missing labels, split the features and targert, and split data
     into training and test sets if asked to.
 
     Inputs:
         - data (DataFrame): the data matrix.
-        - to_drop (list of strings): columns to drop.
         - test (bool): whether to split the data into training and testing set.
         - split_params (dict): mapping arguments for train test split to values.
 
@@ -159,13 +160,14 @@ def split(data, to_drop, test=True, split_params=SPLIT_PARAMS):
     """
     data.dropna(axis=0, subset=[TARGET], inplace=True)
     y = data[TARGET]
-    data.drop(to_drop, axis=1, inplace=True)
+    data.drop(TO_DROP, axis=1, inplace=True)
     X = data
 
     if test:
-        return train_test_split(X, y, **split_params)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, **split_params)
+        return X_train, X_test, y_train, y_test, X.columns
 
-    return X, None, y, None
+    return X, None, y, None, X.columns
 
 
 def impute(X_train, X_test, data_types, ask=True):
@@ -265,7 +267,7 @@ def scale(X_train, X_test, ask=True, scale_test=False):
     return X_train, X_test
 
 
-def save_data(X_train, X_test, y_train, y_test, dir_path=OUTPUT_DIR):
+def save_data(X_train, X_test, y_train, y_test, col_names):
     """
     Saves traning and testing data as numpy arrays in the output directory.
 
@@ -274,7 +276,6 @@ def save_data(X_train, X_test, y_train, y_test, dir_path=OUTPUT_DIR):
         - X_test (array): testing features.
         - y_train (array): training target.
         - y_test (array): testing target.
-        - dir_path (string): relative path to the output directory.
 
     Returns:
         None
@@ -283,12 +284,15 @@ def save_data(X_train, X_test, y_train, y_test, dir_path=OUTPUT_DIR):
     if "processed_data" not in os.listdir("../"):
         os.mkdir("processed_data")
 
-    np.savez(dir_path + 'X.npz', train=X_train, test=X_test)
-    np.savez(dir_path + 'y.npz', train=y_train.values.astype(float),
-                                 test=y_test.values.astype(float))
+    np.savez(OUTPUT_DIR + 'X.npz', train=X_train, test=X_test)
+    np.savez(OUTPUT_DIR + 'y.npz', train=y_train.values.astype(float),
+             test=y_test.values.astype(float))
+    with open(OUTPUT_DIR + 'col_names.pickle', 'wb') as handle:
+        pickle.dump(col_names, handle)
 
     print(("Saved the resulting NumPy matrices to directory {}. Features are"
-           " in 'X.npz' and target is in 'y.npz'.").format(dir_path))
+           " in 'X.npz' and target is in 'y.npz'. Column names are saved as"
+           " 'col_names.pickle'.").format(OUTPUT_DIR))
 
 
 def process():
@@ -336,7 +340,7 @@ def process():
           format(TO_ONE_HOT))
 
     # split the data into training and test sets
-    X_train, X_test, y_train, y_test = split(data, TO_DROP)
+    X_train, X_test, y_train, y_test, col_names = split(data)
 
     # do imputation to fill in the missing values
     X_train, X_test = impute(X_train, X_test, data_types)
@@ -350,7 +354,7 @@ def process():
     # scale training and test data
     X_train, X_test = scale(X_train, X_test, scale_test=True)
 
-    save_data(X_train, X_test, y_train, y_test)
+    save_data(X_train, X_test, y_train, y_test, col_names)
 
 
 #----------------------------------------------------------------------------#
