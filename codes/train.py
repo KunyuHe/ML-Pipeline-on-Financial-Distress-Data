@@ -7,6 +7,7 @@ Author:      Kunyu He, CAPP'20
 import itertools
 import warnings
 import pickle
+import datetime
 import csv
 import numpy as np
 
@@ -91,6 +92,9 @@ DEFAULT_ARGS = {"KNN": {'n_jobs': -1},
                 "Boosting": {'n_estimators': 100, 'random_state': SEED},
                 "Random Forest": {'n_estimators': 300, 'random_state': SEED,
                                   'oob_score': True, 'n_jobs': -1}}
+
+
+SNAP_SHOTS_COUNT = 0
 
 
 #----------------------------------------------------------------------------#
@@ -365,6 +369,10 @@ if __name__ == "__main__":
                                                                  METRICS_NAMES[metric_index]))
                 train_evaluate(model_index, metric_index, data, train_data,
                                write=True, output=logs)
+
+                with open(OUTPUT_DIR + 'snapshots' + '{}.pickle'.format(SNAP_SHOTS_COUNT), 'wb') as handle:
+                    pickle.dump(logs, handle)
+                SNAP_SHOTS_COUNT += 1
         
     with open(OUTPUT_DIR + OUTPUT_FILE, "w", newline="") as file:
         writer = csv.writer(file)
