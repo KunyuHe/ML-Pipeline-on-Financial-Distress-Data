@@ -37,7 +37,34 @@ The pipeline has six components:
 4.  Build Classifier
 5.  Evaluate Classifier
 
-The pipeline currently supports **three classification algorithms** (KNN, Decision Tree, and Random Forest), and use grid search and cross validation to find the best model for the future in terms of either of the **two evaluation metrics** (Accuracy or Area Under the Receiver Operating Characteristic Curve).
+The pipeline currently supports **seven classification algorithms**:
+
+*   KNN Classifier
+*   Logistic Regression Classifier
+*   Decision Tree Classifier
+*   Linear SVC
+*   Bagging
+*   Boosting
+*   Random Forest Classifier
+
+Upon decision on type of the model, it uses grid search and cross validation to find the best set of hyperparameters to build the best model for the future, in terms of either of the **five evaluation metrics**:
+
+*   Accuracy
+*   Precision
+*   Recall
+*   F-1 Score
+*   AUC ROC
+
+Users can run the program either with their specific configurations, or run all possible combinations at once. **Please pay attention to the console prompts and make your choice.**
+
+During the training process, **three/four plots that help the evaluation of a specific model would prompt for `3 seconds` and close automatically**, including:
+
+*   Distribution of the Predicted Probablities
+*   Precision, Recall Curve and Percent of Polpulation
+*   Receiver Operating Characteristic Curve
+*   Feature Importance (Top 5) Bar Plots (if applicable)
+
+**Please don't close them manually**, or the program won't build.
 
 Details would be covered in the following sections.
 
