@@ -7,6 +7,8 @@
 [![Documentation Status](https://readthedocs.org/projects/pydocstyle/badge/?version=stable)](http://www.pydocstyle.org/en/stable/?badge=stable)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/KunyuHe/ML-Pipeline-on-Financial-Distress-Data/master?filepath=.%2FEDA%2FData%20Exploration.ipynb)
 
+**This is a repo for the improved pipeline. Repo for HW3 on DonorsChoose data is [here](https://github.com/KunyuHe/ML-Pipeline-for-Crowdfunding-Project-Outcome-Prediction).**
+
 ## 0. To Reproduce My Results
 
 Folk and clone the repository to your local machine. Change you working directory to the cloned folder and run one of the following:
